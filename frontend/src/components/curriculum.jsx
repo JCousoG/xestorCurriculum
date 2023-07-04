@@ -6,11 +6,11 @@ function EnviarCurriculum() {
     const [privacidad, setPrivaciad] = useState(false)
     const [curriculum, setCurriculum] = useState()
 
-function condicionsDeServicio() {
-    setServicio(true)
+function condicionsDeServicio(evento) {
+    setServicio(evento.target.checked)
 }
-function politicasPrivacidade() {
-setPrivaciad(true)
+function politicasPrivacidade(evento) {
+setPrivaciad(evento.target.checked)
 }
 async function enviarFichero() {
     const token = localStorage.getItem("token")
@@ -23,7 +23,7 @@ async function enviarFichero() {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/JSON",
-                        authorization: "Bearer "+localStorage.getItem("token")
+                        authorization: "Bearer "+token
                     },
                     body: curriculum
                 }
@@ -53,7 +53,7 @@ function manexadorCurriculum(evento) {
     return(
         <>
         <input type="file" value={fichero} onInput={manexadorCurriculum}/>
-        <button onAuxClick={enviarFichero}>Enviar</button>
+        <button onClick={enviarFichero}>Enviar</button>
         <label>
             ¿Aceptas las condiciones del servicio?
         <input name="servcio" type="checkbox" onClick={condicionsDeServicio}/>
