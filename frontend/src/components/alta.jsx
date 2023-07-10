@@ -1,29 +1,28 @@
-const { useState } = require("react")
+import { useState } from "react"
+import { BACKEND_URL } from "./conf.mjs"
 
 function Alta() {
-    const [alias, setAlias] = useState("")
-    const [email, setEmail] = useState("")
 
-    function manexadorAlias(event) {
-        setAlias(event.target.value)
-    }
+    const [email, setEmail] = useState("")
+    
     function manexadorEmail(event) {
         setEmail(event.target.value)
     }
     async function enviarAlta() {
-        const usuario = {alias, email}
         try{
-            const usuarioJSON = JSON.stringify(usuario)
+            const usuarioJSON = JSON.stringify({email})
             const response = await fetch(
-                "http://localhost:8000/usuarios/",
+                BACKEND_URL+"/usuarios/",
                 {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
                     },
-                    body: usuarioJSON              
+                    body: usuarioJSON
                  }
             )
+
+            if (response.ok) setEmail("")
         }
         catch (excepcion) {
             console.log(excepcion)
@@ -31,15 +30,10 @@ function Alta() {
     }
 
     return(
-        <>
-        <h2>Introduce tu alias y una dirección de correo electrónico para poder iniciar sesión</h2>
-        <label>
-            Usuario:
-            <input type="text" placeholder="Alias" onInput={manexadorAlias}/>
-        </label>
+        <>       
         <label>
             Dirección de correo electrónico:
-            <input type="email" onInput={manexadorCorreo}/>
+            <input type="email" onInput={manexadorEmail}/>
         </label>
         <button onClick={enviarAlta}>Enviar</button>
         </>
