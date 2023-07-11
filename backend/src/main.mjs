@@ -79,6 +79,7 @@ app.post("/usuarios/", async (request, response) => {
   app.post("/curriculums/", middlewareauthorization ,async (request, response) => {
     try {
       const datosCurriculum = {...request.body, UsuarioId: response.locals.authorization.id}
+      if (datosCurriculum) Curriculum.update({replaced: true}, {where: {email: request.body.email}})
       const modeloCurriculum = await Curriculum.create(datosCurriculum)
       // TODO: Marcar curriculos previos do usuario como replaced
       response.sendStatus(200)
