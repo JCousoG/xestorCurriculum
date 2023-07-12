@@ -91,17 +91,17 @@ app.post("/usuarios/", async (request, response) => {
     }
   }
   )
-  app.post("/login/", async (request, response) => {
+  app.get("/verify-login:jwt/", async (request, response) => {
     try {
       const usuario = await Usuario.findOne({
         where: {email: request.body.email}
       })
-      const jwt = newEmailValidationJWT(request.body.email)
+      const jwt = newUserAuthorizationJWT(usuario.id)
       console.log("http://localhost:8000/verify/"+jwt)
-        const paseAutorizacion = jwt.sign({ id: usuario.id}, process.env.JWT_SECRET)
-        return response.send(paseAutorizacion)
+      jwt.verify(jwt,process.env.JWT_SECRET, {subject})
+        if (jwt) newUserAuthenticationJWT(usuario.id)
+        return response.sendStatus(401)
       
-      return response.sendStatus(401)
     } catch (error) {
       console.error(error)
       response.status(500)
@@ -109,6 +109,7 @@ app.post("/usuarios/", async (request, response) => {
   
     }
   })
+  
   app.get("/curriculums/", middlewareauthorization, async (request, response) => {
     //TODO
   })

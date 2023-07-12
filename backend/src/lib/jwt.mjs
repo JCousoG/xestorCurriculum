@@ -11,6 +11,7 @@ const JWT_SECRET = process.env.JWT_SECRET ?? "secret"
 function newUserAuthorizationJWT(user) {
    const payload = {id: user.id}
    const options = {issue: JWT_ISSUES.USER_AUTHORIZATION}
+   const subject = {subject: JWT_ISSUES.EMAIL_VALIDATION}
     return jwt.sign(payload, JWT_SECRET, options)
 }
  function newEmailValidationJWT(email) {
