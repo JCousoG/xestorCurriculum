@@ -1,7 +1,7 @@
 import express from "express"
 import cors from "cors"
 import {DataTypes, Sequelize } from "sequelize"
-import { JWT_ISSUES, JWT_SECRET, newEmailValidationJWT, newUserAuthorizationJWT, newUserAuthenticationJWT } from "./lib/jwt.mjs"
+import { jwt, JWT_SUBJECT, JWT_SECRET, newEmailValidationJWT, newUserAuthorizationJWT, newUserAuthenticationJWT } from "./lib/jwt.mjs"
 import { error } from "console"
 
 const app = express()
@@ -50,9 +50,8 @@ app.post("/usuarios/", async (request, response) => {
     try {
       const modeloUsuario = await Usuario.create(request.body)
       response.sendStatus(200)
-      const jwt = newEmailValidationJWT(request.body.email)
-      console.log("http://localhost:8000/verify/"+jwt)
-      //TODO: Crear JWT de verificación de correo con 
+      const token = newEmailValidationJWT(request.body.email)
+      console.log("\n\n>>> Enlace verificación email: http://localhost:8000/verify/"+token)
       //TODO: Enviar correo con enlace de verificación, incluyendo JWT
     }
   
@@ -65,12 +64,13 @@ app.post("/usuarios/", async (request, response) => {
 
   app.get("/verify/:jwt", async (request, response) => {
     try {
-      const jwt = request.params.jwt
-      const payload = jwt.verify(jwt,process.env.JWT_SECRET, {subject: "email-verification"})
+      const token = request.params.jwt
+      const payload = jwt.verify(token, JWT_SECRET, {subject: JWT_SUBJECT.EMAIL_VALIDATION})
     
-    if (jwt) Usuario.update({verificado: true}, {where: {email: payload.email}})
+    if (payload) Usuario.update({verificado: true}, {where: {email: payload.email}})
+    return response.send("Ok")
     }
-    catch {
+    catch (error) {
       console.error(error)
       response.status(422)
       response.status()
@@ -91,16 +91,34 @@ app.post("/usuarios/", async (request, response) => {
     }
   }
   )
-  app.get("/verify-login:jwt/", async (request, response) => {
+  app.post("/login/", async (request, response) => {
     try {
       const usuario = await Usuario.findOne({
         where: {email: request.body.email}
       })
-      const jwt = newUserAuthorizationJWT(usuario.id)
-      console.log("http://localhost:8000/verify/"+jwt)
-      jwt.verify(jwt,process.env.JWT_SECRET, {subject})
-        if (jwt) newUserAuthenticationJWT(usuario.id)
-        return response.sendStatus(401)
+      const token = newUserAuthenticationJWT(usuario)
+      console.log("\n\n>>> Enlace verificación login: http://localhost:8000/verify-login/"+token)
+      // TODO: enviar enlace por email
+      response.status(200)
+      response.send("Ok")
+    }
+    catch (error) {
+      console.error(error)
+      response.status(500)
+      response.send('Error')
+  
+    }
+  })
+
+  app.get("/verify-login/:jwt", async (request, response) => {
+    try {
+      const token = request.params.jwt
+      const payload = jwt.verify(token, JWT_SECRET, {subject: JWT_SUBJECT.USER_AUTHENTICATION})
+      if (payload) {
+        const token = newUserAuthorizationJWT(payload.id)
+        return response.json({token})
+      }
+      return response.sendStatus(401)
       
     } catch (error) {
       console.error(error)
@@ -109,15 +127,14 @@ app.post("/usuarios/", async (request, response) => {
   
     }
   })
-  
   app.get("/curriculums/", middlewareauthorization, async (request, response) => {
     //TODO
   })
 
   function middlewareauthorization(request, response, next) {
     try {
-      const [_, jwt] = request.headers.authorization.split(" ")
-      const payload = jwt.verify(jwt, JWT_SECRET, {subject: JWT_ISSUES.USER_AUTHORIZATION})
+      const [_, token] = request.headers.authorization.split(" ")
+      const payload = jwt.verify(token, JWT_SECRET, {subject: JWT_SUBJECT.USER_AUTHORIZATION})
       response.locals.authorization = payload
       return next()
   } catch (error) {
