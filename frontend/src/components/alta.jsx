@@ -10,7 +10,7 @@ function Alta() {
     }
     async function enviarAlta() {
         try{
-            const usuarioJSON = JSON.stringify({email})
+            const usuarioJSON = JSON.stringify(email)
             const response = await fetch(
                 BACKEND_URL+"/usuarios/",
                 {
